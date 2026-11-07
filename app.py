@@ -1,3 +1,4 @@
+import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -159,7 +160,21 @@ if page == "Overview":
             "Risk level": ["High risk", "Needs review", "Low risk"],
             "Orders": [high, medium, low],
         })
-        st.bar_chart(chart_data, x="Risk level", y="Orders", color="#7656df", height=300)
+        bars = alt.Chart(chart_data).mark_bar(cornerRadiusEnd=7, height=34).encode(
+            y=alt.Y("Risk level:N", sort=["High risk", "Needs review", "Low risk"], title=None,
+                    axis=alt.Axis(labelFontSize=13, labelColor="#47536b", ticks=False, domain=False)),
+            x=alt.X("Orders:Q", title="Number of orders",
+                    axis=alt.Axis(tickMinStep=1, labelFontSize=11, labelColor="#65718a", gridColor="#edf0f6")),
+            color=alt.Color("Risk level:N",
+                scale=alt.Scale(domain=["High risk", "Needs review", "Low risk"],
+                                range=["#d84d5b", "#e5a33c", "#36a887"]),
+                legend=None),
+            tooltip=["Risk level", "Orders"],
+        )
+        labels = bars.mark_text(align="left", baseline="middle", dx=8, fontSize=13,
+                                fontWeight="bold", color="#172033").encode(text="Orders:Q")
+        st.altair_chart((bars + labels).properties(height=190, padding={"left": 8, "right": 28, "top": 12, "bottom": 8}),
+                        width="stretch")
     with right:
         st.markdown('<div class="og-section">Review workload</div>', unsafe_allow_html=True)
         st.metric("Orders to review", high + medium, f"{review_pct}% of all orders")
@@ -173,14 +188,19 @@ if page == "Overview":
         st.success("No orders currently require manual review.")
     else:
         st.dataframe(
-            priority[["order_id", "customer", "total", "risk_score", "risk_level", "recommended_action"]],
-            width="stretch", hide_index=True,
+            priority[["order_id", "customer", "total", "risk_score", "risk_level"]],
+            width="stretch", height=260, hide_index=True,
             column_config={
-                "total": st.column_config.NumberColumn("Order value", format="%.2f DT"),
-                "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100"),
-                "recommended_action": st.column_config.TextColumn("Suggested action", width="large"),
+                "order_id": st.column_config.TextColumn("Order ID", width="small"),
+                "customer": st.column_config.TextColumn("Customer", width="medium"),
+                "total": st.column_config.NumberColumn("Order value", format="%.2f DT", width="small"),
+                "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100", width="medium"),
+                "risk_level": st.column_config.TextColumn("Risk level", width="small"),
             },
         )
+        selected_priority = st.selectbox("View suggested action for", priority.order_id.tolist(), key="priority_order_detail")
+        selected_item = priority[priority.order_id == selected_priority].iloc[0]
+        st.info(f"{selected_item['recommended_action']}")
 
 elif page == "Orders":
     st.markdown('<div class="og-section">All orders</div>', unsafe_allow_html=True)
@@ -196,11 +216,16 @@ elif page == "Orders":
         view = view[view.order_id.str.contains(query, case=False) | view.customer.str.contains(query, case=False)]
     st.caption(f"Showing {len(view)} of {n} orders")
     st.dataframe(
-        view[["order_id", "customer", "phone", "address", "total", "risk_score", "risk_level", "risk_reasons"]],
-        width="stretch", hide_index=True,
+        view[["order_id", "customer", "phone", "address", "total", "risk_score", "risk_level"]],
+        width="stretch", height=360, hide_index=True,
         column_config={
-            "total": st.column_config.NumberColumn("Order value", format="%.2f DT"),
-            "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100"),
+            "order_id": st.column_config.TextColumn("Order ID", width="small"),
+            "customer": st.column_config.TextColumn("Customer", width="medium"),
+            "phone": st.column_config.TextColumn("Phone", width="small"),
+            "address": st.column_config.TextColumn("Address", width="medium"),
+            "total": st.column_config.NumberColumn("Order value", format="%.2f DT", width="small"),
+            "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100", width="medium"),
+            "risk_level": st.column_config.TextColumn("Risk level", width="small"),
         },
     )
     st.download_button("Export analyzed orders as CSV", df.to_csv(index=False).encode("utf-8-sig"), "orderguard-analysis.csv", "text/csv", type="primary")
