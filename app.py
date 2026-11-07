@@ -22,7 +22,9 @@ st.markdown("""
 :root{--ink:#172033;--muted:#65718a;--line:#e5e9f2;--purple:#6846d9}
 html,body,[class*="css"]{font-family:Inter,sans-serif!important}
 .stApp,[data-testid="stAppViewContainer"]{background:#f5f7fb;color:var(--ink)}
-.block-container{max-width:1600px;padding:2.2rem 2.5rem 3rem}
+.block-container{max-width:1480px;padding:2rem 2.4rem 3rem}
+[data-testid="stVerticalBlock"]{gap:1rem}
+[data-testid="stSidebar"] .block-container{padding:1.5rem 1rem 2rem}
 [data-testid="stSidebar"]{background:#111827;border-right:1px solid #273247}
 [data-testid="stSidebar"] *{color:#eef2ff!important}
 [data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#1d2739!important;border:1px dashed #64748b!important}
@@ -38,11 +40,13 @@ html,body,[class*="css"]{font-family:Inter,sans-serif!important}
 .og-subtitle{display:block;max-width:820px;color:#65718a;font-size:1rem;line-height:1.7;margin:8px 0 26px;overflow-wrap:anywhere}
 @media(max-width:700px){.block-container{padding:1.2rem 1rem 2rem}.og-subtitle{font-size:.92rem;line-height:1.6;margin-bottom:20px}}
 .og-section{color:#172033;font-size:1.2rem;font-weight:800;letter-spacing:-.025em;margin:1.5rem 0 .8rem}
-.og-card{background:#fff;border:1px solid #e5e9f2;border-radius:16px;padding:18px 20px;box-shadow:0 5px 18px #17203308;min-height:120px}
+.og-card{background:#fff;border:1px solid #e5e9f2;border-radius:16px;padding:18px 20px;box-shadow:0 5px 18px #17203308;min-height:126px;height:100%}
 .og-card-label{color:#69758c;font-size:.72rem;letter-spacing:.08em;font-weight:800}
 .og-card-value{color:#172033;font-size:2.1rem;line-height:1.25;font-weight:800;margin-top:9px}
 .og-card-note{color:#8791a5;font-size:.78rem;margin-top:4px}
-.og-panel{background:#fff;border:1px solid #e5e9f2;border-radius:15px;padding:18px 20px;box-shadow:0 5px 18px #17203308}
+.og-panel{background:#fff;border:1px solid #e5e9f2;border-radius:15px;padding:20px 22px;box-shadow:0 5px 18px #17203308;margin-bottom:12px}
+.og-muted{color:#65718a;font-size:.9rem;line-height:1.65}
+[data-testid="stAlert"]{border-radius:12px}
 .og-footer{border-top:1px solid #e5e9f2;margin-top:2.3rem;padding-top:1rem;color:#8993a6;font-size:.75rem}
 [data-testid="stMetric"]{background:#fff;border:1px solid #e5e9f2;border-radius:14px;padding:13px 15px;box-shadow:0 4px 14px #17203308}
 [data-testid="stMetricLabel"] p{color:#65718a!important;font-weight:700}
@@ -97,16 +101,23 @@ review_pct = round(review / n * 100) if n else 0
 issues_count = int((df.data_issues != "").sum())
 average_value = float(df.total.mean()) if n else 0
 
-st.markdown('<div class="og-eyebrow">E-COMMERCE ORDER INTELLIGENCE</div>', unsafe_allow_html=True)
-st.title("Order command center")
-st.markdown('<div class="og-subtitle">A practical workspace to review incoming orders, understand risk signals, and prioritize manual customer confirmation.</div>', unsafe_allow_html=True)
+page_headers = {
+    "Overview": ("E-COMMERCE ORDER INTELLIGENCE", "Order command center", "A clear snapshot of incoming orders, review priorities, and data quality."),
+    "Orders": ("ORDER OPERATIONS", "Manage orders", "Search, filter, inspect, and export orders from your current dataset."),
+    "Analytics": ("PERFORMANCE INSIGHTS", "Order analytics", "Understand order values, risk signals, and data quality at a glance."),
+    "How it works": ("PRODUCT GUIDE", "How OrderGuard works", "Learn how order data is checked and how review recommendations are generated."),
+}
+eyebrow, heading, subtitle = page_headers[page]
+st.markdown(f'<div class="og-eyebrow">{eyebrow}</div>', unsafe_allow_html=True)
+st.title(heading)
+st.markdown(f'<div class="og-subtitle">{subtitle}</div>', unsafe_allow_html=True)
 
 if page == "Overview":
     cols = st.columns(4, gap="medium")
     metrics = [
         ("TOTAL ORDERS", n, "Orders in this dataset"),
         ("HIGH RISK", high, "Manual confirmation priority"),
-        ("NEEDS REVIEW", medium, "Check details before dispatch"),
+        ("MEDIUM RISK", medium, "Review details before dispatch"),
         ("DATA ISSUES", issues_count, "Rows with invalid or missing fields"),
     ]
     for col, (label, value, note) in zip(cols, metrics):
@@ -154,7 +165,7 @@ if page == "Overview":
         st.info(priority.loc[priority.order_id == chosen, "recommended_action"].iloc[0])
 
 elif page == "Orders":
-    st.markdown('<div class="og-section">Order management</div>', unsafe_allow_html=True)
+    st.markdown('<div class="og-section">Filter orders</div>', unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 1.5, 1])
     with c1: level = st.selectbox("Risk level", ["All", "High", "Medium", "Low"])
     with c2: query = st.text_input("Search", placeholder="Order ID, customer, phone, or address")
@@ -169,18 +180,25 @@ elif page == "Orders":
     if issue_filter == "Issues only": view = view[view.data_issues != ""]
     elif issue_filter == "No issues": view = view[view.data_issues == ""]
     st.caption(f"Showing {len(view)} of {n} orders")
-    st.dataframe(view[["order_id", "customer", "phone", "address", "total", "risk_score", "risk_level"]],
-        width="stretch", height=390, hide_index=True,
-        column_config={
-            "order_id": st.column_config.TextColumn("Order ID", width="small"),
-            "customer": st.column_config.TextColumn("Customer", width="medium"),
-            "phone": st.column_config.TextColumn("Phone", width="small"),
-            "address": st.column_config.TextColumn("Address", width="medium"),
-            "total": st.column_config.NumberColumn("Order value", format="%.2f DT", width="small"),
-            "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100", width="medium"),
-            "risk_level": st.column_config.TextColumn("Risk level", width="small"),
-        })
-    st.download_button("Export analyzed orders", df.to_csv(index=False).encode("utf-8-sig"), "orderguard-analysis.csv", "text/csv", type="primary")
+    if view.empty:
+        st.info("No orders match these filters. Try changing the risk level, search term, or data-quality filter.")
+    else:
+        st.dataframe(view[["order_id", "customer", "phone", "address", "total", "risk_score", "risk_level"]],
+            width="stretch", height=390, hide_index=True,
+            column_config={
+                "order_id": st.column_config.TextColumn("Order ID", width="small"),
+                "customer": st.column_config.TextColumn("Customer", width="medium"),
+                "phone": st.column_config.TextColumn("Phone", width="small"),
+                "address": st.column_config.TextColumn("Address", width="medium"),
+                "total": st.column_config.NumberColumn("Order value", format="%.2f DT", width="small"),
+                "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100", width="medium"),
+                "risk_level": st.column_config.TextColumn("Risk level", width="small"),
+            })
+    download_col, count_col = st.columns([1, 2], vertical_alignment="center")
+    with download_col:
+        st.download_button("Export filtered orders", view.to_csv(index=False).encode("utf-8-sig"), "orderguard-orders.csv", "text/csv", type="primary", width="stretch")
+    with count_col:
+        st.caption(f"{len(view)} matching orders · {issues_count} data-quality issues in the full dataset")
     st.markdown('<div class="og-section">Order investigation</div>', unsafe_allow_html=True)
     if n:
         selected_id = st.selectbox("Select an order to inspect", df.order_id.tolist(), key="order_inspector")
@@ -220,6 +238,7 @@ elif page == "Analytics":
     breakdown = pd.DataFrame({"Risk level": ["High", "Medium", "Low"], "Orders": [high, medium, low]})
     st.dataframe(breakdown, width="stretch", hide_index=True)
     st.caption("Analytics are calculated from the currently loaded CSV or synthetic demo dataset.")
+    st.info("Risk levels are heuristic review indicators. They should support human checks, not automated order rejection.")
 
 else:
     st.markdown('<div class="og-section">How OrderGuard works</div>', unsafe_allow_html=True)
