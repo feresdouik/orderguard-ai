@@ -54,6 +54,44 @@ class RiskEngineTests(unittest.TestCase):
         self.assertIn("Invalid order history", result.iloc[0].data_issues)
         self.assertEqual(float(result.iloc[0].total), 0.0)
 
+    def test_duplicate_order_ids_are_flagged_on_both_rows(self):
+        raw = pd.DataFrame(
+            [
+                ["DUP-1", "First", "20123456", "Sousse", 50, 1, ""],
+                ["DUP-1", "Second", "22123456", "Tunis", 60, 2, ""],
+            ],
+            columns=REQUIRED_COLUMNS,
+        )
+        result = prepare_orders(raw)
+        self.assertEqual(int(result.data_issues.str.contains("Duplicate order ID").sum()), 2)
+
+    def test_negative_values_are_flagged_and_normalized(self):
+        raw = pd.DataFrame(
+            [["NEG-1", "Demo", "20123456", "Sousse", -10, -2, ""]],
+            columns=REQUIRED_COLUMNS,
+        )
+        result = prepare_orders(raw)
+        self.assertIn("Negative order value", result.iloc[0].data_issues)
+        self.assertIn("Negative order history", result.iloc[0].data_issues)
+        self.assertEqual(float(result.iloc[0].total), -10.0)
+        self.assertEqual(float(result.iloc[0].previous_orders), -2.0)
+
+    def test_missing_required_columns_raise_clear_error(self):
+        raw = pd.DataFrame({"order_id": ["A-1"]})
+        with self.assertRaisesRegex(ValueError, "Missing required columns"):
+            prepare_orders(raw)
+
+    def test_duplicate_detection_ignores_blank_ids(self):
+        raw = pd.DataFrame(
+            [
+                ["", "First", "20123456", "Sousse", 50, 1, ""],
+                ["", "Second", "22123456", "Tunis", 60, 2, ""],
+            ],
+            columns=REQUIRED_COLUMNS,
+        )
+        result = prepare_orders(raw)
+        self.assertEqual(int(result.data_issues.str.contains("Duplicate order ID").sum()), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
