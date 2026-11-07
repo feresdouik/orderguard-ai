@@ -1,7 +1,12 @@
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="OrderGuard AI", page_icon="🛡️", layout="wide")
+st.set_page_config(
+    page_title="OrderGuard AI",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 REQUIRED = ["order_id", "customer", "phone", "address", "total", "previous_orders", "notes"]
 SAMPLE = [
@@ -13,27 +18,45 @@ SAMPLE = [
     ["OG-1006", "Nour Haddad", "22114567", "Sfax, Sakiet Ezzit", 125, 3, "Confirmed size and color"],
     ["OG-1007", "Karim Mansour", "55190876", "Ariana, Ennasr", 275, 2, "Asked to change address"],
 ]
+
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-html,body,[class*="css"]{font-family:'DM Sans',sans-serif}
-.stApp{background:radial-gradient(ellipse at 75% -10%,rgba(124,58,237,.20),transparent 38%),#0b0d14;color:#f5f5fa}
-.block-container{max-width:1440px;padding-top:2rem;padding-bottom:3rem}
-[data-testid="stSidebar"]{background:#10131d;border-right:1px solid rgba(255,255,255,.08)}
-[data-testid="stMetric"]{background:linear-gradient(145deg,#191e2d,#121622);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 18px}
-[data-testid="stMetricLabel"]{color:#a7aec0;font-weight:600}
-[data-testid="stMetricValue"]{color:#fff;font-weight:800}
-.eyebrow{color:#b9a0ff;font-size:.74rem;font-weight:800;letter-spacing:.16em}
-.hero{font-size:2.35rem;font-weight:800;letter-spacing:-.045em;color:#fff;margin:.3rem 0}
-.sub{color:#9ca3b7;font-size:1rem}
-.card{background:linear-gradient(145deg,#191e2d,#121622);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;min-height:112px}
-.klabel{color:#9ca3b7;font-size:.78rem;font-weight:700;letter-spacing:.04em}
-.kvalue{color:#fff;font-size:2rem;font-weight:800;margin-top:8px}
-.knote{color:#7f879c;font-size:.76rem;margin-top:2px}
-.section{font-size:1.2rem;font-weight:750;color:#fff;margin:1.3rem 0 .8rem}
-.stButton>button{border-radius:10px}
-[data-testid="stDataFrame"]{border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
-.footer{color:#737b90;font-size:.78rem;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;margin-top:30px}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root { --ink:#172033; --muted:#65718a; --line:#e5e9f2; --purple:#6846d9; --surface:#ffffff; }
+html, body, [class*="css"] { font-family: Inter, sans-serif !important; }
+.stApp { background:#f5f7fb; color:var(--ink); }
+[data-testid="stAppViewContainer"] { background:#f5f7fb; }
+.block-container { max-width:1460px; padding:2.2rem 2.4rem 3rem; }
+[data-testid="stHeader"] { background:rgba(245,247,251,.92); }
+[data-testid="stSidebar"] { background:#111827; border-right:1px solid #273247; }
+[data-testid="stSidebar"] * { color:#eef2ff !important; }
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section { background:#1d2739; border:1px dashed #64748b; }
+h1,h2,h3,h4,p,label,span,div { text-rendering:optimizeLegibility; }
+h1,h2,h3 { color:var(--ink) !important; letter-spacing:-.03em; }
+p, label, [data-testid="stMarkdownContainer"] p { color:#47536b; }
+.og-brand { color:#fff; font-size:1.35rem; font-weight:800; letter-spacing:-.04em; padding:.35rem 0 .15rem; }
+.og-brand span { color:#a995ff; }
+.og-side-note { color:#9eabc1; font-size:.72rem; letter-spacing:.13em; font-weight:700; }
+.og-eyebrow { color:#6846d9; font-size:.72rem; letter-spacing:.15em; font-weight:800; margin-bottom:.5rem; }
+.og-title { color:#172033; font-size:2.35rem; line-height:1.15; font-weight:800; letter-spacing:-.055em; margin:0 0 .55rem; }
+.og-subtitle { color:#65718a; font-size:1rem; line-height:1.65; margin-bottom:1.7rem; }
+.og-card { background:#fff; border:1px solid #e5e9f2; border-radius:16px; padding:18px 20px; box-shadow:0 5px 18px rgba(23,32,51,.035); min-height:124px; }
+.og-card-label { color:#69758c; font-size:.72rem; letter-spacing:.08em; font-weight:800; }
+.og-card-value { color:#172033; font-size:2.05rem; line-height:1.25; font-weight:800; margin-top:10px; }
+.og-card-note { color:#8791a5; font-size:.78rem; margin-top:4px; }
+.og-section { color:#172033; font-size:1.18rem; font-weight:800; letter-spacing:-.025em; margin:1.65rem 0 .85rem; }
+.og-panel { background:#fff; border:1px solid #e5e9f2; border-radius:16px; padding:18px 20px; box-shadow:0 5px 18px rgba(23,32,51,.035); }
+.og-footer { border-top:1px solid #e5e9f2; margin-top:2.5rem; padding-top:1rem; color:#8993a6; font-size:.76rem; }
+[data-testid="stMetric"] { background:#fff; border:1px solid #e5e9f2; border-radius:14px; padding:14px 16px; box-shadow:0 4px 14px rgba(23,32,51,.03); }
+[data-testid="stMetricLabel"] p { color:#65718a !important; font-weight:700; font-size:.8rem; }
+[data-testid="stMetricValue"] { color:#172033 !important; font-weight:800; }
+[data-testid="stMetricDelta"] { font-size:.76rem; }
+[data-testid="stDataFrame"] { background:#fff; border:1px solid #e5e9f2; border-radius:12px; overflow:hidden; }
+[data-testid="stDataFrame"] * { color:#172033; }
+.stTextInput input, .stSelectbox div[data-baseweb="select"] > div { background:#fff !important; color:#172033 !important; border-color:#d9dfeb !important; border-radius:10px !important; }
+.stButton button, .stDownloadButton button { border-radius:10px; font-weight:700; min-height:2.7rem; }
+.stProgress > div > div > div { background:#6846d9; }
+hr { border-color:#e5e9f2; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -53,23 +76,24 @@ def assess(row):
     score = min(score, 100)
     level = "High" if score >= 50 else "Medium" if score >= 25 else "Low"
     action = {
-        "High": "Contact customer and confirm phone + full address before dispatch.",
-        "Medium": "Review missing details and send a confirmation message.",
-        "Low": "Continue with the normal confirmation workflow.",
+        "High": "Contact the customer and confirm the phone number and full address before dispatch.",
+        "Medium": "Review the flagged details and send a customer confirmation message.",
+        "Low": "Continue with the normal order-confirmation workflow.",
     }[level]
     return pd.Series([score, level, " • ".join(reasons) if reasons else "No rule-based warning detected", action])
 
 with st.sidebar:
-    st.markdown("## 🛡️ OrderGuard AI")
-    st.caption("INTELLIGENT ORDER REVIEW")
+    st.markdown('<div class="og-brand">🛡️ OrderGuard <span>AI</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="og-side-note">ORDER REVIEW WORKSPACE</div>', unsafe_allow_html=True)
     st.divider()
-    page = st.radio("WORKSPACE", ["Overview", "Orders", "How it works"])
+    page = st.radio("NAVIGATION", ["Overview", "Orders", "How it works"], label_visibility="visible")
     st.divider()
-    st.markdown("**Import order data**")
-    upload = st.file_uploader("Upload CSV", type=["csv"])
-    st.caption("Required: " + ", ".join(REQUIRED))
+    st.markdown("**Import your orders**")
+    upload = st.file_uploader("Choose a CSV file", type=["csv"], help="Your file should include the required columns.")
+    st.caption("Required columns")
+    st.code("order_id, customer, phone, address, total, previous_orders, notes", language="text")
     st.divider()
-    st.caption("EARLY ACCESS · KIROWEEN 2026")
+    st.markdown('<div class="og-side-note">PROTOTYPE · KIROWEEN 2026</div>', unsafe_allow_html=True)
 
 try:
     if upload:
@@ -96,60 +120,76 @@ medium = int((df.risk_level == "Medium").sum())
 low = int((df.risk_level == "Low").sum())
 review_pct = round((high + medium) / n * 100) if n else 0
 
-st.markdown('<div class="eyebrow">E-COMMERCE RISK INTELLIGENCE</div><div class="hero">Order command center</div><div class="sub">A clearer view of incoming orders, risk signals, and the next best action.</div>', unsafe_allow_html=True)
+st.markdown('<div class="og-eyebrow">E-COMMERCE ORDER INTELLIGENCE</div><div class="og-title">Order command center</div><div class="og-subtitle">Understand incoming orders, spot missing information, and decide which customers need a manual confirmation.</div>', unsafe_allow_html=True)
 
 if page == "Overview":
-    cols = st.columns(4)
+    metrics = st.columns(4, gap="medium")
     cards = [
-        ("TOTAL ORDERS", n, "Orders in current dataset"),
-        ("HIGH RISK", high, "Require manual confirmation"),
+        ("TOTAL ORDERS", n, "Orders in this dataset"),
+        ("HIGH RISK", high, "Manual confirmation needed"),
         ("NEEDS REVIEW", medium, "Check details before dispatch"),
         ("LOW RISK", low, "No major rule-based flags"),
     ]
-    for col, (label, value, note) in zip(cols, cards):
+    for col, (label, value, note) in zip(metrics, cards):
         with col:
-            st.markdown(f'<div class="card"><div class="klabel">{label}</div><div class="kvalue">{value}</div><div class="knote">{note}</div></div>', unsafe_allow_html=True)
-    left, right = st.columns([1.35, 1])
+            st.markdown(f'<div class="og-card"><div class="og-card-label">{label}</div><div class="og-card-value">{value}</div><div class="og-card-note">{note}</div></div>', unsafe_allow_html=True)
+
+    left, right = st.columns([1.35, 1], gap="large")
     with left:
-        st.markdown('<div class="section">Risk distribution</div>', unsafe_allow_html=True)
-        st.bar_chart(pd.DataFrame({"Orders": [high, medium, low]}, index=["High risk", "Needs review", "Low risk"]), color="#8b5cf6", height=270)
+        st.markdown('<div class="og-section">Risk distribution</div>', unsafe_allow_html=True)
+        chart_data = pd.DataFrame({"Orders": [high, medium, low]}, index=["High risk", "Needs review", "Low risk"])
+        st.bar_chart(chart_data, color="#7656df", height=260)
     with right:
-        st.markdown('<div class="section">Review priority</div>', unsafe_allow_html=True)
+        st.markdown('<div class="og-section">Review workload</div>', unsafe_allow_html=True)
+        st.markdown('<div class="og-panel">', unsafe_allow_html=True)
         st.metric("Orders to review", high + medium, f"{review_pct}% of all orders")
         st.progress(review_pct / 100 if n else 0)
-        st.caption("Share of orders with at least one rule-based signal.")
-        st.info("A risk score is a review signal, not proof of fraud.")
-    st.markdown('<div class="section">Priority queue</div>', unsafe_allow_html=True)
+        st.caption("Orders with at least one rule-based signal.")
+        st.info("A risk score is a review aid — not proof of fraud.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="og-section">Priority review queue</div>', unsafe_allow_html=True)
     priority = df[df.risk_level.isin(["High", "Medium"])].head(6)
-    st.dataframe(priority[["order_id", "customer", "total", "risk_score", "risk_level", "recommended_action"]], width="stretch", hide_index=True, column_config={
-        "total": st.column_config.NumberColumn("Order value", format="%.2f DT"),
-        "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100"),
-        "recommended_action": st.column_config.TextColumn("Suggested action", width="large"),
-    })
+    if priority.empty:
+        st.success("No orders currently require manual review.")
+    else:
+        st.dataframe(
+            priority[["order_id", "customer", "total", "risk_score", "risk_level", "recommended_action"]],
+            width="stretch", hide_index=True,
+            column_config={
+                "total": st.column_config.NumberColumn("Order value", format="%.2f DT"),
+                "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100"),
+                "recommended_action": st.column_config.TextColumn("Suggested action", width="large"),
+            },
+        )
 
 elif page == "Orders":
-    st.markdown('<div class="section">Order management</div>', unsafe_allow_html=True)
-    a, b = st.columns(2)
+    st.markdown('<div class="og-section">All orders</div>', unsafe_allow_html=True)
+    a, b = st.columns([1, 2], gap="medium")
     with a:
-        level = st.selectbox("Risk level", ["All", "High", "Medium", "Low"])
+        level = st.selectbox("Filter by risk", ["All", "High", "Medium", "Low"])
     with b:
-        query = st.text_input("Search", placeholder="Order ID or customer")
+        query = st.text_input("Search orders", placeholder="Type an order ID or customer name")
     view = df.copy()
     if level != "All":
         view = view[view.risk_level == level]
     if query.strip():
         view = view[view.order_id.str.contains(query, case=False) | view.customer.str.contains(query, case=False)]
     st.caption(f"Showing {len(view)} of {n} orders")
-    st.dataframe(view[["order_id", "customer", "phone", "address", "total", "risk_score", "risk_level", "risk_reasons"]], width="stretch", hide_index=True, column_config={
-        "total": st.column_config.NumberColumn("Order value", format="%.2f DT"),
-        "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100"),
-    })
-    st.download_button("↓ Export analyzed orders", df.to_csv(index=False).encode("utf-8-sig"), "orderguard-analysis.csv", "text/csv", type="primary")
-    st.markdown('<div class="section">Investigate an order</div>', unsafe_allow_html=True)
+    st.dataframe(
+        view[["order_id", "customer", "phone", "address", "total", "risk_score", "risk_level", "risk_reasons"]],
+        width="stretch", hide_index=True,
+        column_config={
+            "total": st.column_config.NumberColumn("Order value", format="%.2f DT"),
+            "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100"),
+        },
+    )
+    st.download_button("Export analyzed orders as CSV", df.to_csv(index=False).encode("utf-8-sig"), "orderguard-analysis.csv", "text/csv", type="primary")
+    st.markdown('<div class="og-section">Inspect an order</div>', unsafe_allow_html=True)
     if n:
-        order_id = st.selectbox("Select order", df.order_id.tolist())
+        order_id = st.selectbox("Choose an order", df.order_id.tolist())
         item = df[df.order_id == order_id].iloc[0]
-        x, y = st.columns([1, 2])
+        x, y = st.columns([1, 2], gap="large")
         with x:
             st.metric("Risk score", f"{int(item.risk_score)}/100")
             st.write(f"**Risk level:** {item.risk_level}")
@@ -157,17 +197,18 @@ elif page == "Orders":
             st.markdown("**Risk indicators**")
             st.write(item.risk_reasons)
             st.markdown("**Recommended next step**")
-            st.success(item.recommended_action)
+            st.info(item.recommended_action)
 
 else:
-    st.markdown('<div class="section">How OrderGuard works</div>', unsafe_allow_html=True)
-    for number, title, description in [
-        ("01", "Import orders", "Upload a CSV or explore the built-in synthetic dataset."),
-        ("02", "Review risk signals", "Transparent rules flag missing details, limited order history, high order values, and notes requiring attention."),
-        ("03", "Take action", "Use the suggested next step to guide manual customer confirmation before dispatch."),
-        ("04", "Export results", "Download analyzed orders and use them in your existing workflow."),
-    ]:
-        st.markdown(f'<div class="card" style="margin-bottom:12px;min-height:0"><div class="eyebrow">{number}</div><div style="font-size:1.12rem;font-weight:750;color:#fff;margin:5px 0">{title}</div><div class="sub">{description}</div></div>', unsafe_allow_html=True)
-    st.warning("This prototype uses explainable rules. It is not a trained fraud model and does not verify customer identity or address. A high score does not mean an order is fraudulent.")
+    st.markdown('<div class="og-section">How OrderGuard works</div>', unsafe_allow_html=True)
+    steps = [
+        ("01", "Import orders", "Upload a CSV file or explore the built-in synthetic sample orders."),
+        ("02", "Review risk signals", "Transparent rules flag missing contact details, limited order history, higher order values, and notes that need attention."),
+        ("03", "Take action", "Use the suggested next step to guide a manual customer confirmation before dispatch."),
+        ("04", "Export results", "Download the analyzed order list and continue using your existing workflow."),
+    ]
+    for number, title, description in steps:
+        st.markdown(f'<div class="og-panel" style="margin-bottom:12px"><div class="og-eyebrow">{number}</div><div style="font-size:1.08rem;font-weight:800;color:#172033;margin:5px 0">{title}</div><div style="color:#65718a;line-height:1.6">{description}</div></div>', unsafe_allow_html=True)
+    st.warning("This prototype uses explainable rules. It is not a trained fraud model and does not verify a customer's identity or address. A high score does not mean an order is fraudulent.")
 
-st.markdown('<div class="footer">ORDERGUARD AI · EARLY PROTOTYPE · KIROWEEN 2026 · Use synthetic data for public demos.</div>', unsafe_allow_html=True)
+st.markdown('<div class="og-footer">ORDERGUARD AI · EARLY PROTOTYPE · KIROWEEN 2026 · Use synthetic data for public demos.</div>', unsafe_allow_html=True)
