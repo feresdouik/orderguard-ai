@@ -79,7 +79,10 @@ with st.sidebar:
 
 try:
     if upload is not None:
-        raw = pd.read_csv(upload)
+        raw = pd.read_csv(upload, encoding="utf-8-sig")
+        if raw.empty and len(raw.columns) == 0:
+            st.error("The uploaded CSV is empty. Add the required columns and at least one order.")
+            st.stop()
         missing = [col for col in REQUIRED_COLUMNS if col not in raw.columns]
         if missing:
             st.error("CSV is missing required columns: " + ", ".join(missing))
@@ -201,8 +204,13 @@ elif page == "Orders":
         st.caption(f"{len(view)} matching orders · {issues_count} data-quality issues in the full dataset")
     st.markdown('<div class="og-section">Order investigation</div>', unsafe_allow_html=True)
     if n:
-        selected_id = st.selectbox("Select an order to inspect", df.order_id.tolist(), key="order_inspector")
-        item = df[df.order_id == selected_id].iloc[0]
+        selected_index = st.selectbox(
+            "Select an order to inspect",
+            options=list(range(n)),
+            format_func=lambda index: f"{df.iloc[index].order_id or 'No ID'} — {df.iloc[index].customer or 'Unknown customer'}",
+            key="order_inspector",
+        )
+        item = df.iloc[selected_index]
         a, b = st.columns([1, 2], gap="large")
         with a:
             st.metric("Risk score", f"{int(item.risk_score)}/100", item.risk_level)
