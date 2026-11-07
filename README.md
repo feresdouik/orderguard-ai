@@ -1,75 +1,79 @@
 # OrderGuard AI
 
-An early-stage, explainable order-review dashboard for e-commerce sellers, with a focus on cash-on-delivery workflows.
+**Explainable order-review workspace for e-commerce sellers handling cash-on-delivery (COD) orders.**
 
-> **Current status:** Working Streamlit MVP. The current risk score is a deterministic demo heuristic, not an AI fraud model and not proof that an order is fraudulent.
+OrderGuard AI helps an operator organize incoming orders, highlight incomplete or unusual records, understand transparent review signals, and decide which customers may need manual confirmation.
 
-## What it does
+> **Prototype status:** This is a working Streamlit MVP. Risk scores are deterministic, illustrative heuristics. They are not a trained fraud model, a fraud verdict, identity verification, or a guarantee of delivery outcomes. A human operator must review every order.
 
-- Loads synthetic sample orders or a seller-provided CSV.
-- Checks required order fields.
-- Calculates an explainable 0–100 risk indicator from configurable-style demo rules.
-- Shows the reasons behind each score and suggests a manual verification step.
-- Provides Overview, Orders, Analytics, and How it works workspaces.
-- Flags basic data-quality issues and exports analyzed data to CSV.
+## Demo features
+
+- **Overview:** order totals, risk distribution, review workload, and priority queue.
+- **Orders:** search by order ID/customer/phone/address, filter by risk and data quality, inspect an individual order, and export filtered results.
+- **Analytics:** average order value and risk-level breakdowns.
+- **CSV import:** required-column validation, numeric normalization, missing-field checks, negative-value checks, and duplicate order-ID detection.
+- **Explainable review signals:** every score is accompanied by the rules that contributed to it and a suggested manual next step.
+- **Synthetic demo data:** the app works immediately without API keys or external services.
+
+## Screens and navigation
+
+Use the sidebar to switch between Overview, Orders, Analytics, and How it works. Upload a CSV in the sidebar to replace the built-in synthetic sample.
+
+## CSV schema
+
+The uploaded CSV must include these exact column names:
+
+| Column | Meaning | Example |
+|---|---|---|
+| `order_id` | Order reference | `OG-1001` |
+| `customer` | Customer display name | `Demo Customer` |
+| `phone` | Phone as text | `20123456` |
+| `address` | Delivery address | `Sousse, Tunisia` |
+| `total` | Numeric order total | `89.00` |
+| `previous_orders` | Number of previous orders | `2` |
+| `notes` | Optional operator note | `Confirm size` |
+
+A ready-to-upload synthetic file is available at `sample_orders.csv`. Do not upload real customer data to public demos, screenshots, or untrusted services. Phone numbers and addresses are personal data.
+
+## Risk indicator (illustrative rules)
+
+| Signal | Points |
+|---|---:|
+| Missing phone | +30 |
+| Missing delivery address | +25 |
+| No previous successful orders recorded | +15 |
+| Order total at or above 250 | +10 |
+| Notes contain selected review keywords | +20 |
+
+- **Low:** 0–24
+- **Medium:** 25–49
+- **High:** 50–100
+
+The rules are illustrative and have not been statistically validated. A high score does not mean an order is fraudulent. The prototype does not contact customers, verify phone ownership, validate addresses, or automatically reject orders.
 
 ## Run locally
 
-Requires Python 3.11 or newer.
+Python 3.11 or newer is recommended.
 
-```bash
-git clone https://github.com/feresdouik/orderguard-ai.git
-cd orderguard-ai
-python -m venv .venv
+### Windows (Command Prompt)
+
+```cmd
+py -3.12 -m venv .venv
+.venv\Scripts\activate
+py -m pip install -r requirements.txt
+py -m streamlit run app.py
 ```
 
-Activate the virtual environment:
+If Python 3.12 is not installed, use `python` instead of `py -3.12`.
 
-**Windows PowerShell**
-```powershell
-.venv\Scripts\Activate.ps1
-```
+### macOS / Linux
 
-**macOS / Linux**
 ```bash
+python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
-
-Install and run:
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-## CSV format
-
-The uploaded CSV must contain these columns:
-
-| Column | Description |
-|---|---|
-| `order_id` | Unique order reference |
-| `customer` | Customer display name |
-| `phone` | Phone number as text |
-| `address` | Delivery address |
-| `total` | Order total (numeric) |
-| `previous_orders` | Number of previous orders |
-| `notes` | Optional order notes |
-
-Use synthetic or properly authorized data in demos. Do not commit real customer data.
-
-## Risk indicator (demo rules)
-
-- Missing phone: +30
-- Missing address: +25
-- No previous orders recorded: +15
-- Order total >= 250: +10
-- Notes containing selected review keywords: +20
-- Final score is capped at 100.
-
-Risk levels: Low (0–24), Medium (25–49), High (50–100).
-
-These are initial illustrative rules. They have not been statistically validated and should not be used as the sole basis for rejecting orders. The operator remains responsible for reviewing each case.
 
 ## Run tests
 
@@ -77,18 +81,36 @@ These are initial illustrative rules. They have not been statistically validated
 python -m unittest discover -s tests -v
 ```
 
-The scoring and CSV preparation logic lives in `risk_engine.py`, separate from the Streamlit interface in `app.py`.
+Tests cover clean orders, risk thresholds, score bounds, missing/invalid values, negative values, missing columns, and duplicate order IDs.
 
-## Kiro project files
+## Project structure
 
-The `.kiro/` directory contains product and technical steering plus the requirements, design, and task breakdown for the MVP.
+```text
+.
+├── app.py                 # Streamlit interface and workflows
+├── risk_engine.py         # CSV validation and explainable scoring
+├── sample_orders.csv      # Synthetic CSV for upload demos
+├── tests/
+│   └── test_risk_engine.py
+├── .kiro/
+│   └── steering/          # Product and technical guidance for Kiro
+├── requirements.txt
+├── README.md
+└── LICENSE
+```
 
-## Roadmap
+## Kiro usage
 
-- Add a persistent database and secure user authentication.
-- Improve the review workflow and localization.
-- Explore agent-assisted extraction and explanations with clear evidence and human oversight.
-- Deploy and validate a public demo.
+The `.kiro/steering/` files define the product vision, scope, technical stack, and safety principles used to guide development. The project separates the scoring logic from the Streamlit interface and includes automated tests for core behavior.
+
+When preparing the hackathon submission, describe only the Kiro features actually used during development (for example, specs, steering, hooks, agents, or MCP) and include genuine evidence from your workflow.
+
+## Current limitations and next steps
+
+- No user accounts, authentication, or persistent database.
+- No live store, shipping, SMS, or WhatsApp integrations.
+- No trained machine-learning model or statistically validated thresholds.
+- No production deployment or security review is included by this repository alone.
 
 ## License
 
