@@ -10,7 +10,8 @@ An early-stage, explainable order-review dashboard for e-commerce sellers, with 
 - Checks required order fields.
 - Calculates an explainable 0–100 risk indicator from configurable-style demo rules.
 - Shows the reasons behind each score and suggests a manual verification step.
-- Filters orders by risk level and exports the analyzed data to CSV.
+- Provides Overview, Orders, Analytics, and How it works workspaces.
+- Flags basic data-quality issues and exports analyzed data to CSV.
 
 ## Run locally
 
@@ -70,14 +71,21 @@ Risk levels: Low (0–24), Medium (25–49), High (50–100).
 
 These are initial illustrative rules. They have not been statistically validated and should not be used as the sole basis for rejecting orders. The operator remains responsible for reviewing each case.
 
+## Run tests
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The scoring and CSV preparation logic lives in `risk_engine.py`, separate from the Streamlit interface in `app.py`.
+
 ## Kiro project files
 
 The `.kiro/` directory contains product and technical steering plus the requirements, design, and task breakdown for the MVP.
 
 ## Roadmap
 
-- Add automated tests for risk-scoring boundaries.
-- Separate data processing from the Streamlit interface.
+- Add a persistent database and secure user authentication.
 - Improve the review workflow and localization.
 - Explore agent-assisted extraction and explanations with clear evidence and human oversight.
 - Deploy and validate a public demo.
