@@ -76,6 +76,17 @@ class RiskEngineTests(unittest.TestCase):
         self.assertEqual(float(result.iloc[0].total), -10.0)
         self.assertEqual(float(result.iloc[0].previous_orders), -2.0)
 
+    def test_infinite_numeric_values_are_flagged_and_safely_replaced(self):
+        raw = pd.DataFrame(
+            [["INF-1", "Demo", "20123456", "Sousse", float("inf"), float("-inf"), ""]],
+            columns=REQUIRED_COLUMNS,
+        )
+        result = prepare_orders(raw)
+        self.assertIn("Invalid order value", result.iloc[0].data_issues)
+        self.assertIn("Invalid order history", result.iloc[0].data_issues)
+        self.assertEqual(float(result.iloc[0].total), 0.0)
+        self.assertEqual(float(result.iloc[0].previous_orders), 0.0)
+
     def test_missing_required_columns_raise_clear_error(self):
         raw = pd.DataFrame({"order_id": ["A-1"]})
         with self.assertRaisesRegex(ValueError, "Missing required columns"):
