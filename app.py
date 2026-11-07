@@ -33,11 +33,10 @@ html,body,[class*="css"]{font-family:Inter,sans-serif!important}
 .og-brand span{color:#a995ff}
 .og-side-note{color:#9eabc1;font-size:.7rem;letter-spacing:.13em;font-weight:700}
 .og-code{background:#263449;border:1px solid #40516b;border-radius:10px;padding:11px;color:#f8fafc!important;font: .7rem/1.8 ui-monospace,monospace;overflow-wrap:anywhere}
-.og-header{display:flex;flex-direction:column;align-items:flex-start;gap:10px;width:100%;margin:0 0 28px;padding:4px 0 22px;border-bottom:1px solid #e5e9f2;}
-.og-eyebrow{display:block;width:100%;color:#6846d9;font-size:.72rem;line-height:1.5;letter-spacing:.15em;font-weight:800;margin:0;overflow-wrap:anywhere}
-.og-title{display:block;width:100%;max-width:100%;color:#172033;font-size:clamp(1.8rem,3.2vw,2.5rem);line-height:1.18;font-weight:800;letter-spacing:-.04em;margin:0;overflow-wrap:anywhere;}
-.og-subtitle{display:block;width:100%;max-width:820px;color:#65718a;font-size:1rem;line-height:1.7;margin:0;overflow-wrap:anywhere}
-@media(max-width:700px){.block-container{padding:1.2rem 1rem 2rem}.og-header{gap:8px;margin-bottom:20px;padding-bottom:16px}.og-title{font-size:1.8rem;line-height:1.2}.og-subtitle{font-size:.92rem;line-height:1.6}}
+.og-eyebrow{display:block;color:#6846d9;font-size:.72rem;line-height:1.5;letter-spacing:.15em;font-weight:800;margin:0 0 8px;overflow-wrap:anywhere}
+[data-testid="stHeading"] h1{color:#172033!important;font-size:clamp(1.8rem,3.2vw,2.5rem)!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.04em!important;margin:0!important;padding:0!important;overflow-wrap:anywhere}
+.og-subtitle{display:block;max-width:820px;color:#65718a;font-size:1rem;line-height:1.7;margin:8px 0 26px;overflow-wrap:anywhere}
+@media(max-width:700px){.block-container{padding:1.2rem 1rem 2rem}.og-subtitle{font-size:.92rem;line-height:1.6;margin-bottom:20px}}
 .og-section{color:#172033;font-size:1.2rem;font-weight:800;letter-spacing:-.025em;margin:1.5rem 0 .8rem}
 .og-card{background:#fff;border:1px solid #e5e9f2;border-radius:16px;padding:18px 20px;box-shadow:0 5px 18px #17203308;min-height:120px}
 .og-card-label{color:#69758c;font-size:.72rem;letter-spacing:.08em;font-weight:800}
@@ -98,7 +97,9 @@ review_pct = round(review / n * 100) if n else 0
 issues_count = int((df.data_issues != "").sum())
 average_value = float(df.total.mean()) if n else 0
 
-st.markdown('<div class="og-header"><div class="og-eyebrow">E-COMMERCE ORDER INTELLIGENCE</div><div class="og-title">Order command center</div><div class="og-subtitle">A practical workspace to review incoming orders, understand risk signals, and prioritize manual customer confirmation.</div></div>', unsafe_allow_html=True)
+st.markdown('<div class="og-eyebrow">E-COMMERCE ORDER INTELLIGENCE</div>', unsafe_allow_html=True)
+st.title("Order command center")
+st.markdown('<div class="og-subtitle">A practical workspace to review incoming orders, understand risk signals, and prioritize manual customer confirmation.</div>', unsafe_allow_html=True)
 
 if page == "Overview":
     cols = st.columns(4, gap="medium")
