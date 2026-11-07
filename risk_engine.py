@@ -7,6 +7,11 @@ import pandas as pd
 REQUIRED_COLUMNS = ["order_id", "customer", "phone", "address", "total", "previous_orders", "notes"]
 
 
+def _is_finite_number(value):
+    """Return whether a parsed numeric value is finite and usable."""
+    return pd.notna(value) and math.isfinite(float(value))
+
+
 def assess_order(row):
     """Return a bounded score, risk label, reasons, and human-review action."""
     score = 0
@@ -61,20 +66,20 @@ def prepare_orders(source):
             problems.append("Duplicate order ID")
         if not row["customer"]:
             problems.append("Missing customer name")
-        if not math.isfinite(row["total"]) if pd.notna(row["total"]) else True:
+        if not _is_finite_number(row["total"]):
             problems.append("Invalid order value")
         elif row["total"] < 0:
             problems.append("Negative order value")
-        if not math.isfinite(row["previous_orders"]) if pd.notna(row["previous_orders"]) else True:
+        if not _is_finite_number(row["previous_orders"]):
             problems.append("Invalid order history")
         elif row["previous_orders"] < 0:
             problems.append("Negative order history")
         issues.append(" • ".join(problems))
 
     frame["data_issues"] = issues
-    frame["total"] = frame["total"].where(frame["total"].map(lambda value: pd.notna(value) and math.isfinite(value)), 0)
+    frame["total"] = frame["total"].where(frame["total"].map(_is_finite_number), 0)
     frame["previous_orders"] = frame["previous_orders"].where(
-        frame["previous_orders"].map(lambda value: pd.notna(value) and math.isfinite(value)), 0
+        frame["previous_orders"].map(_is_finite_number), 0
     )
 
     assessed = frame.apply(
