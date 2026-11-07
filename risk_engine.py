@@ -1,5 +1,7 @@
 """Transparent, explainable order-risk heuristics for the OrderGuard prototype."""
 
+import math
+
 import pandas as pd
 
 REQUIRED_COLUMNS = ["order_id", "customer", "phone", "address", "total", "previous_orders", "notes"]
@@ -38,33 +40,42 @@ def assess_order(row):
 
 def prepare_orders(source):
     """Normalize imported rows, flag data-quality problems, and assess every order."""
-    frame = source.copy()
+    missing_columns = [column for column in REQUIRED_COLUMNS if column not in source.columns]
+    if missing_columns:
+        raise ValueError("Missing required columns: " + ", ".join(missing_columns))
+
+    frame = source[REQUIRED_COLUMNS].copy()
     for column in ["order_id", "customer", "phone", "address", "notes"]:
         frame[column] = frame[column].fillna("").astype(str).str.strip()
 
     frame["total"] = pd.to_numeric(frame["total"], errors="coerce")
     frame["previous_orders"] = pd.to_numeric(frame["previous_orders"], errors="coerce")
 
+    duplicate_ids = frame["order_id"].ne("") & frame["order_id"].duplicated(keep=False)
     issues = []
-    for _, row in frame.iterrows():
+    for position, (_, row) in enumerate(frame.iterrows()):
         problems = []
         if not row["order_id"]:
             problems.append("Missing order ID")
+        elif duplicate_ids.iloc[position]:
+            problems.append("Duplicate order ID")
         if not row["customer"]:
             problems.append("Missing customer name")
-        if pd.isna(row["total"]):
+        if not math.isfinite(row["total"]) if pd.notna(row["total"]) else True:
             problems.append("Invalid order value")
         elif row["total"] < 0:
             problems.append("Negative order value")
-        if pd.isna(row["previous_orders"]):
+        if not math.isfinite(row["previous_orders"]) if pd.notna(row["previous_orders"]) else True:
             problems.append("Invalid order history")
         elif row["previous_orders"] < 0:
             problems.append("Negative order history")
         issues.append(" • ".join(problems))
 
     frame["data_issues"] = issues
-    frame["total"] = frame["total"].fillna(0)
-    frame["previous_orders"] = frame["previous_orders"].fillna(0)
+    frame["total"] = frame["total"].where(frame["total"].map(lambda value: pd.notna(value) and math.isfinite(value)), 0)
+    frame["previous_orders"] = frame["previous_orders"].where(
+        frame["previous_orders"].map(lambda value: pd.notna(value) and math.isfinite(value)), 0
+    )
 
     assessed = frame.apply(
         lambda row: pd.Series(
