@@ -1,0 +1,7 @@
+order_id,customer,phone,address,total,previous_orders,notes
+OG-DEMO-001,Amira Demo,20123456,"Sousse, Khzema",89,4,Customer confirmed by message
+OG-DEMO-002,Mohamed Demo,,"Tunis",145,0,Asked for urgent delivery
+OG-DEMO-003,Sarra Demo,55112233,,320,1,Address needs confirmation
+OG-DEMO-004,Yassine Demo,98112233,"Monastir, centre ville",59,7,Returning customer
+OG-DEMO-005,Nour Demo,22114567,"Sfax, Sakiet Ezzit",125,3,Confirmed size and color
+OG-DEMO-006,Karim Demo,55190876,"Ariana, Ennasr",275,2,Asked to change address
