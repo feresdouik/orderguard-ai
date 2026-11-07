@@ -2,9 +2,10 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from risk_engine import REQUIRED_COLUMNS, prepare_orders
+
 st.set_page_config(page_title="OrderGuard AI", page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
 
-REQUIRED = ["order_id", "customer", "phone", "address", "total", "previous_orders", "notes"]
 SAMPLE = [
     ["OG-1001", "Amira Ben Salem", "20123456", "Sousse, Khzema", 89, 4, "Customer confirmed by message"],
     ["OG-1002", "Mohamed Ali", "", "Tunis", 145, 0, "Asked for urgent delivery"],
@@ -53,54 +54,6 @@ html,body,[class*="css"]{font-family:Inter,sans-serif!important}
 </style>
 """, unsafe_allow_html=True)
 
-def assess(row):
-    score, reasons = 0, []
-    checks = [
-        (not str(row.phone).strip(), 30, "Phone number is missing"),
-        (not str(row.address).strip(), 25, "Delivery address is missing"),
-        (row.previous_orders <= 0, 15, "No previous successful orders recorded"),
-        (row.total >= 250, 10, "Order value is relatively high"),
-        (any(w in str(row.notes).lower() for w in ["urgent", "cancel", "fake", "change address"]), 20, "Order note needs manual review"),
-    ]
-    for condition, points, reason in checks:
-        if condition:
-            score += points
-            reasons.append(reason)
-    score = min(score, 100)
-    level = "High" if score >= 50 else "Medium" if score >= 25 else "Low"
-    action = {
-        "High": "Contact the customer and confirm the phone number and full address before dispatch.",
-        "Medium": "Review the flagged details and send a customer confirmation message.",
-        "Low": "Continue with the normal order-confirmation workflow.",
-    }[level]
-    return pd.Series([score, level, " • ".join(reasons) if reasons else "No rule-based warning detected", action])
-
-def prepare_data(source):
-    frame = source.copy()
-    for col in ["order_id", "customer", "phone", "address", "notes"]:
-        frame[col] = frame[col].fillna("").astype(str).str.strip()
-    frame["total"] = pd.to_numeric(frame["total"], errors="coerce")
-    frame["previous_orders"] = pd.to_numeric(frame["previous_orders"], errors="coerce")
-    frame["data_issues"] = ""
-    issues = []
-    for idx, row in frame.iterrows():
-        problems = []
-        if not row["order_id"]: problems.append("Missing order ID")
-        if not row["customer"]: problems.append("Missing customer name")
-        if pd.isna(row["total"]): problems.append("Invalid order value")
-        elif row["total"] < 0: problems.append("Negative order value")
-        if pd.isna(row["previous_orders"]): problems.append("Invalid order history")
-        elif row["previous_orders"] < 0: problems.append("Negative order history")
-        issues.append(" • ".join(problems))
-    frame["data_issues"] = issues
-    frame["total"] = frame["total"].fillna(0)
-    frame["previous_orders"] = frame["previous_orders"].fillna(0)
-    frame[["risk_score", "risk_level", "risk_reasons", "recommended_action"]] = frame.apply(assess, axis=1)
-    frame.loc[frame["data_issues"] != "", "risk_reasons"] = frame.loc[frame["data_issues"] != "", "risk_reasons"].apply(
-        lambda value: (value + " • " if value else "") + "Data quality issue needs correction"
-    )
-    frame = frame.sort_values(["risk_score", "order_id"], ascending=[False, True]).reset_index(drop=True)
-    return frame
 
 with st.sidebar:
     st.markdown('<div class="og-brand">🛡️ OrderGuard <span>AI</span></div>', unsafe_allow_html=True)
@@ -122,14 +75,14 @@ with st.sidebar:
 try:
     if upload is not None:
         raw = pd.read_csv(upload)
-        missing = [col for col in REQUIRED if col not in raw.columns]
+        missing = [col for col in REQUIRED_COLUMNS if col not in raw.columns]
         if missing:
             st.error("CSV is missing required columns: " + ", ".join(missing))
             st.stop()
-        raw = raw[REQUIRED]
+        raw = raw[REQUIRED_COLUMNS]
     else:
-        raw = pd.DataFrame(SAMPLE, columns=REQUIRED)
-    df = prepare_data(raw)
+        raw = pd.DataFrame(SAMPLE, columns=REQUIRED_COLUMNS)
+    df = prepare_orders(raw)
 except Exception as exc:
     st.error(f"Could not read this CSV file: {exc}")
     st.stop()
