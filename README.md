@@ -99,6 +99,12 @@ Tests cover clean orders, risk thresholds, score bounds, missing/invalid values,
 └── LICENSE
 ```
 
+## Demo and deployment preparation
+
+- [Demo video script](docs/DEMO_SCRIPT.md)
+- [Hackathon submission draft](docs/HACKATHON_SUBMISSION.md)
+- [Deployment guide](DEPLOYMENT.md)
+
 ## Kiro usage
 
 The `.kiro/steering/` files define the product vision, scope, technical stack, and safety principles used to guide development. The project separates the scoring logic from the Streamlit interface and includes automated tests for core behavior.
