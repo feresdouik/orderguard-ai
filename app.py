@@ -43,7 +43,12 @@ html, body, [class*="css"] { font-family: Inter, sans-serif !important; }
 [data-testid="stHeader"] { background:rgba(245,247,251,.92); }
 [data-testid="stSidebar"] { background:#111827; border-right:1px solid #273247; }
 [data-testid="stSidebar"] * { color:#eef2ff !important; }
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section { background:#1d2739; border:1px dashed #64748b; }
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section { background:#1d2739 !important; border:1px dashed #64748b !important; }
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section * { color:#f8fafc !important; }
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button { background:#f8fafc !important; color:#172033 !important; border:0 !important; }
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button * { color:#172033 !important; }
+.og-columns-code { background:#263449; border:1px solid #40516b; border-radius:10px; padding:12px 10px; color:#f8fafc !important; font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.72rem; line-height:1.8; overflow-wrap:anywhere; }
 h1,h2,h3,h4,p,label,span,div { text-rendering:optimizeLegibility; }
 h1,h2,h3 { color:var(--ink) !important; letter-spacing:-.03em; }
 p, label, [data-testid="stMarkdownContainer"] p { color:#47536b; }
@@ -104,7 +109,7 @@ with st.sidebar:
     st.markdown("**Import your orders**")
     upload = st.file_uploader("Choose a CSV file", type=["csv"], help="Your file should include the required columns.")
     st.caption("Required columns")
-    st.code("order_id, customer, phone, address, total, previous_orders, notes", language="text")
+    st.markdown('<div class="og-columns-code">order_id, customer,<br>phone, address, total,<br>previous_orders, notes</div>', unsafe_allow_html=True)
     st.divider()
     st.markdown('<div class="og-side-note">PROTOTYPE · KIROWEEN 2026</div>', unsafe_allow_html=True)
 
