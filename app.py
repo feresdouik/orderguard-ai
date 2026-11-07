@@ -26,7 +26,20 @@ st.markdown("""
 html, body, [class*="css"] { font-family: Inter, sans-serif !important; }
 .stApp { background:#f5f7fb; color:var(--ink); }
 [data-testid="stAppViewContainer"] { background:#f5f7fb; }
-.block-container { max-width:1460px; padding:2.2rem 2.4rem 3rem; }
+.block-container { max-width:1680px; padding:2.6rem 3.2rem 3.5rem; }
+[data-testid="stMarkdownContainer"] { font-size:1rem; line-height:1.65; }
+[data-testid="stSidebar"] [data-testid="stCode"] { background:#1d2739; border:1px solid #35445d; border-radius:10px; }
+[data-testid="stSidebar"] [data-testid="stCode"] pre, [data-testid="stSidebar"] [data-testid="stCode"] code { color:#f1f5ff !important; font-size:.78rem !important; white-space:pre-wrap !important; }
+.og-title { font-size:2.7rem; }
+.og-subtitle { font-size:1.08rem; }
+.og-card { min-height:138px; padding:22px 23px; }
+.og-card-label { font-size:.78rem; }
+.og-card-value { font-size:2.35rem; }
+.og-card-note { font-size:.86rem; }
+.og-section { font-size:1.3rem; margin:1.8rem 0 1rem; }
+[data-testid="stDataFrame"] { width:100%; }
+[data-testid="stDataFrame"] iframe { min-height:250px; }
+
 [data-testid="stHeader"] { background:rgba(245,247,251,.92); }
 [data-testid="stSidebar"] { background:#111827; border-right:1px solid #273247; }
 [data-testid="stSidebar"] * { color:#eef2ff !important; }
@@ -137,16 +150,17 @@ if page == "Overview":
     left, right = st.columns([1.35, 1], gap="large")
     with left:
         st.markdown('<div class="og-section">Risk distribution</div>', unsafe_allow_html=True)
-        chart_data = pd.DataFrame({"Orders": [high, medium, low]}, index=["High risk", "Needs review", "Low risk"])
-        st.bar_chart(chart_data, color="#7656df", height=260)
+        chart_data = pd.DataFrame({
+            "Risk level": ["High risk", "Needs review", "Low risk"],
+            "Orders": [high, medium, low],
+        })
+        st.bar_chart(chart_data, x="Risk level", y="Orders", color="#7656df", height=300)
     with right:
         st.markdown('<div class="og-section">Review workload</div>', unsafe_allow_html=True)
-        st.markdown('<div class="og-panel">', unsafe_allow_html=True)
         st.metric("Orders to review", high + medium, f"{review_pct}% of all orders")
         st.progress(review_pct / 100 if n else 0)
         st.caption("Orders with at least one rule-based signal.")
         st.info("A risk score is a review aid — not proof of fraud.")
-        st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="og-section">Priority review queue</div>', unsafe_allow_html=True)
     priority = df[df.risk_level.isin(["High", "Medium"])].head(6)
