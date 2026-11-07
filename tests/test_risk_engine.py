@@ -65,7 +65,7 @@ class RiskEngineTests(unittest.TestCase):
         result = prepare_orders(raw)
         self.assertEqual(int(result.data_issues.str.contains("Duplicate order ID").sum()), 2)
 
-    def test_negative_values_are_flagged_and_normalized(self):
+    def test_negative_values_are_flagged(self):
         raw = pd.DataFrame(
             [["NEG-1", "Demo", "20123456", "Sousse", -10, -2, ""]],
             columns=REQUIRED_COLUMNS,
