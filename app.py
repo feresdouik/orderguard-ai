@@ -170,7 +170,7 @@ if page == "Overview":
         chosen_pos = st.selectbox(
             "Suggested action for order",
             options=list(range(len(priority))),
-            format_func=lambda i: priority.iloc[i].order_id,
+            format_func=lambda i: f"{priority.iloc[i].order_id} — {priority.iloc[i].customer or 'Unknown customer'}",
         )
         st.info(priority.iloc[chosen_pos].recommended_action)
 
