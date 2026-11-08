@@ -12,14 +12,21 @@ def _is_finite_number(value):
     return pd.notna(value) and math.isfinite(float(value))
 
 
+def _is_blank(value):
+    """Return True when a contact field is absent, NaN, or whitespace-only."""
+    return pd.isna(value) or not str(value).strip()
+
+
 def assess_order(row):
     """Return a bounded score, risk label, reasons, and human-review action."""
     score = 0
     reasons = []
     checks = [
-        (not str(row.phone).strip(), 30, "Phone number is missing"),
-        (not str(row.address).strip(), 25, "Delivery address is missing"),
-        (row.previous_orders <= 0, 15, "No previous successful orders recorded"),
+        (_is_blank(row.phone), 30, "Phone number is missing"),
+        (_is_blank(row.address), 25, "Delivery address is missing"),
+        # Guard with pd.notna so that NaN previous_orders (invalid/missing data) does NOT
+        # trigger the no-history penalty — only a genuine zero or negative value does.
+        (pd.notna(row.previous_orders) and row.previous_orders <= 0, 15, "No previous successful orders recorded"),
         (row.total >= 250, 10, "Order value is relatively high"),
         (
             any(word in str(row.notes).lower() for word in ["urgent", "cancel", "fake", "change address"]),
@@ -78,18 +85,31 @@ def prepare_orders(source):
 
     frame["data_issues"] = issues
     frame["total"] = frame["total"].where(frame["total"].map(_is_finite_number), 0)
+
+    # previous_orders NaN replacement is deferred until after assess_order so that
+    # invalid/missing history does not silently trigger the no-history risk penalty.
+    # assess_order guards with pd.notna() and skips the penalty for NaN values.
+    assessed_cols = ["risk_score", "risk_level", "risk_reasons", "recommended_action"]
+    if frame.empty:
+        # apply() on an empty DataFrame does not create the assessed columns;
+        # add them explicitly so callers always receive a consistent schema.
+        for col in assessed_cols:
+            frame[col] = pd.Series(dtype="object")
+    else:
+        assessed = frame.apply(
+            lambda row: pd.Series(
+                assess_order(row),
+                index=assessed_cols,
+            ),
+            axis=1,
+        )
+        frame[assessed_cols] = assessed
+
+    # Replace NaN/inf previous_orders with 0 now that scoring is complete.
     frame["previous_orders"] = frame["previous_orders"].where(
         frame["previous_orders"].map(_is_finite_number), 0
     )
 
-    assessed = frame.apply(
-        lambda row: pd.Series(
-            assess_order(row),
-            index=["risk_score", "risk_level", "risk_reasons", "recommended_action"],
-        ),
-        axis=1,
-    )
-    frame[assessed.columns] = assessed
     flagged = frame["data_issues"] != ""
     frame.loc[flagged, "risk_reasons"] = frame.loc[flagged, "risk_reasons"].apply(
         lambda value: (value + " • " if value else "") + "Data quality issue needs correction"

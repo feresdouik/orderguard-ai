@@ -80,8 +80,11 @@ with st.sidebar:
 try:
     if upload is not None:
         raw = pd.read_csv(upload, encoding="utf-8-sig")
-        if raw.empty and len(raw.columns) == 0:
+        if len(raw.columns) == 0:
             st.error("The uploaded CSV is empty. Add the required columns and at least one order.")
+            st.stop()
+        if raw.empty:
+            st.error("The uploaded CSV has no data rows. Add at least one order below the header.")
             st.stop()
         missing = [col for col in REQUIRED_COLUMNS if col not in raw.columns]
         if missing:
@@ -164,8 +167,12 @@ if page == "Overview":
                 "risk_score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=100, format="%d/100", width="medium"),
                 "risk_level": st.column_config.TextColumn("Risk level", width="small"),
             })
-        chosen = st.selectbox("Suggested action for order", priority.order_id.tolist())
-        st.info(priority.loc[priority.order_id == chosen, "recommended_action"].iloc[0])
+        chosen_pos = st.selectbox(
+            "Suggested action for order",
+            options=list(range(len(priority))),
+            format_func=lambda i: priority.iloc[i].order_id,
+        )
+        st.info(priority.iloc[chosen_pos].recommended_action)
 
 elif page == "Orders":
     st.markdown('<div class="og-section">Filter orders</div>', unsafe_allow_html=True)
